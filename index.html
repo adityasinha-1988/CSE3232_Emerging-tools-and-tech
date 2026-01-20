@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSE3232: Emerging Tools & Tech Hub</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0; /* Slate 200 */
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Icons (Inlined for Stability) ---
+        const IconWrapper = ({ children, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+        const Terminal = (p) => <IconWrapper {...p}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></IconWrapper>;
+        const Server = (p) => <IconWrapper {...p}><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></IconWrapper>;
+        const BarChart3 = (p) => <IconWrapper {...p}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></IconWrapper>;
+        const Brain = (p) => <IconWrapper {...p}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></IconWrapper>;
+        const Atom = (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"/></IconWrapper>;
+        const ChevronRight = (p) => <IconWrapper {...p}><polyline points="9 18 15 12 9 6"/></IconWrapper>;
+        const BookOpen = (p) => <IconWrapper {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconWrapper>;
+        const Code = (p) => <IconWrapper {...p}><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></IconWrapper>;
+        const Copy = (p) => <IconWrapper {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></IconWrapper>;
+        const ExternalLink = (p) => <IconWrapper {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></IconWrapper>;
+        const CheckCircle = (p) => <IconWrapper {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconWrapper>;
+        const Layers = (p) => <IconWrapper {...p}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></IconWrapper>;
+        const Database = (p) => <IconWrapper {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconWrapper>;
+        const ShieldCheck = (p) => <IconWrapper {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></IconWrapper>;
+        const Cpu = (p) => <IconWrapper {...p}><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></IconWrapper>;
+        const GitBranch = (p) => <IconWrapper {...p}><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></IconWrapper>;
+        const LayoutDashboard = (p) => <IconWrapper {...p}><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></IconWrapper>;
+        const Menu = (p) => <IconWrapper {...p}><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></IconWrapper>;
+        const X = (p) => <IconWrapper {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconWrapper>;
+        const Filter = (p) => <IconWrapper {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconWrapper>;
+
+        // --- Data & Content ---
+
+        const modules = [
+            { id: 'home', title: 'Dashboard', icon: LayoutDashboard },
+            { id: 'devops', title: 'Mod 1: DevOps & Git', icon: GitBranch },
+            { id: 'containers', title: 'Mod 2: Docker & K8s', icon: Server },
+            { id: 'data', title: 'Mod 3: Data Intel', icon: BarChart3 },
+            { id: 'ai', title: 'Mod 4: AI & GenAI', icon: Brain },
+            { id: 'future', title: 'Mod 5: Future Tech', icon: Atom },
+            { id: 'capstone', title: 'Capstone Hub', icon: Layers },
+        ];
+
+        const courseLabs = {
+            devops: [
+                { id: 1, title: "Lab 1: Git Mastery", url: "https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository", desc: "Official Pro Git Book - Chapters 1 & 2" },
+                { id: 2, title: "Lab 2: CI/CD Pipelines", url: "https://docs.github.com/en/actions/quickstart", desc: "Automate workflows with GitHub Actions" }
+            ],
+            containers: [
+                { id: 3, title: "Lab 3: Docker Basics", url: "https://docs.docker.com/get-started/", desc: "Containerize a simple Node.js/Python app" },
+                { id: 4, title: "Lab 4: Kubernetes Orchestration", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/", desc: "Deploy apps using Minikube or Kind" }
+            ],
+            data: [
+                { id: 5, title: "Lab 5: Tableau Visualization", url: "https://help.tableau.com/current/guides/get-started-tutorial/en-us/get-started-tutorial-home.htm", desc: "Build interactive dashboards & connect data" },
+                { id: 6, title: "Lab 6: Power BI Reports", url: "https://learn.microsoft.com/en-us/power-bi/fundamentals/service-get-started", desc: "Data modeling and DAX basics" }
+            ],
+            ai: [
+                { id: 7, title: "Lab 7: Prompt Engineering", url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/", desc: "Guide to effective LLM prompting" },
+                { id: 8, title: "Lab 8: RAG Systems", url: "https://python.langchain.com/docs/use_cases/question_answering/", desc: "Retrieval Augmented Generation with LangChain" },
+                { id: 9, title: "Lab 9: GenAI App Dev", url: "https://docs.streamlit.io/get-started/create-an-app", desc: "Build frontend for AI apps with Streamlit" }
+            ],
+            future: [
+                { id: 10, title: "Lab 10: Quantum Circuits", url: "https://qiskit.org/learn/", desc: "IBM Qiskit Textbook & Labs" },
+                { id: 11, title: "Lab 11: Blockchain Basics", url: "https://andersbrownworth.com/blockchain/", desc: "Visual Demo of Hash, Block, and Chain" },
+                { id: 12, title: "Lab 12: Smart Contracts", url: "https://cryptozombies.io/", desc: "Learn Solidity by building a Zombie game" }
+            ]
+        };
+
+        const cheatSheets = {
+            git: [
+                { cmd: 'git init', desc: 'Initialize a new repository' },
+                { cmd: 'git clone <url>', desc: 'Clone a repository' },
+                { cmd: 'git add .', desc: 'Stage all changes' },
+                { cmd: 'git commit -m "msg"', desc: 'Commit changes' },
+                { cmd: 'git push origin main', desc: 'Push to remote' },
+                { cmd: 'git checkout -b <name>', desc: 'Create & switch branch' },
+            ],
+            docker: [
+                { cmd: 'docker build -t <name> .', desc: 'Build image from Dockerfile' },
+                { cmd: 'docker run -d -p 80:80 <img >', desc: 'Run container in background' },
+                { cmd: 'docker ps -a', desc: 'List all containers' },
+                { cmd: 'docker exec -it <id> sh', desc: 'Access container shell' },
+                { cmd: 'docker system prune', desc: 'Clean unused data' },
+            ],
+            kubectl: [
+                { cmd: 'kubectl get pods', desc: 'List all pods' },
+                { cmd: 'kubectl apply -f <file.yaml>', desc: 'Apply configuration' },
+                { cmd: 'kubectl logs <pod-name>', desc: 'Print pod logs' },
+                { cmd: 'kubectl scale --replicas=3 dep/app', desc: 'Scale application' },
+            ]
+        };
+
+        // --- 30 Integrated Projects ---
+        const allProjects = [
+            // Category: MLOps (AI + DevOps + Containers)
+            { id: 1, title: "Auto-Grader Bot", cat: "MLOps", tech: ["OpenAI API", "Python", "GitHub Actions"], diff: "Medium", desc: "A Github Action that triggers on PRs, reads code diffs, and sends them to an LLM to automatically comment on code style and potential bugs." },
+            { id: 2, title: "RAG-in-a-Box", cat: "MLOps", tech: ["LangChain", "ChromaDB", "Docker", "Streamlit"], diff: "Hard", desc: "A self-contained Docker image running a local RAG pipeline. Users can spin it up to chat with local PDF documents without external dependencies." },
+            { id: 3, title: "Resume Optimizer", cat: "MLOps", tech: ["OpenAI/Gemini", "Streamlit", "Docker"], diff: "Medium", desc: "Web app where users upload a resume and job description. The AI rewrites the resume to highlight relevant skills, all packaged in a Docker container." },
+            { id: 4, title: "Sentiment API", cat: "MLOps", tech: ["FastAPI", "HuggingFace", "Docker"], diff: "Easy", desc: "A high-performance REST API running in Docker. Accepts text input and returns sentiment scores using a pre-trained Transformer model." },
+            { id: 5, title: "Model Drift Detector", cat: "MLOps", tech: ["Scikit-learn", "GitHub Actions", "Python"], diff: "Hard", desc: "Automated workflow that runs daily to evaluate model performance against new data. Alerts developers if accuracy drops below a threshold." },
+            { id: 6, title: "Translation Microservice", cat: "MLOps", tech: ["MarianMT", "Flask", "Docker"], diff: "Medium", desc: "An offline, containerized microservice using HuggingFace models to translate text between languages without calling external paid APIs." },
+
+            // Category: Cloud Native (K8s + Docker + Web)
+            { id: 7, title: "Un-Crashable To-Do", cat: "Cloud", tech: ["Kubernetes", "Node.js", "Redis"], diff: "Hard", desc: "A Node.js app backed by Redis, deployed on K8s with ReplicaSets. Demonstrates self-healing by automatically restarting pods when killed." },
+            { id: 8, title: "Load Balanced Calc", cat: "Cloud", tech: ["Kubernetes", "Nginx", "Python"], diff: "Hard", desc: "A stateless calculator API running on 3 pods. Uses an Nginx Ingress Controller to distribute incoming traffic evenly across instances." },
+            { id: 9, title: "Microservices Blog", cat: "Cloud", tech: ["Docker Compose", "React", "Express", "MongoDB"], diff: "Medium", desc: "Full-stack app split into three containers: a React frontend, Express backend, and MongoDB database, orchestrated via Docker Compose." },
+            { id: 10, title: "Chaos Monkey Demo", cat: "Cloud", tech: ["Kubernetes", "Bash", "Cron"], diff: "Medium", desc: "A background script running in the cluster that randomly deletes pods every 5 minutes to test and demonstrate the resilience of the deployment." },
+            { id: 11, title: "Portfolio Container", cat: "Cloud", tech: ["Docker", "Nginx", "Alpine Linux"], diff: "Easy", desc: "Optimization challenge: Package a static HTML portfolio into the smallest possible Docker image (under 10MB) using Alpine and multi-stage builds." },
+            { id: 12, title: "K8s Dashboard", cat: "Cloud", tech: ["Kubernetes", "Prometheus", "Grafana"], diff: "Hard", desc: "A monitoring stack deployed on K8s. Uses Prometheus to scrape metrics and Grafana to visualize CPU, Memory, and Network usage per pod." },
+
+            // Category: Data Engineering (Data + Cloud/DevOps)
+            { id: 13, title: "Git History Visualizer", cat: "Data", tech: ["Git Log", "Python", "Tableau"], diff: "Medium", desc: "Script that parses complex git logs into CSV format. Visualize team velocity, commit times, and contributor activity using Tableau dashboards." },
+            { id: 14, title: "Brand Sentiment", cat: "Data", tech: ["Twitter API", "HuggingFace", "Power BI"], diff: "Medium", desc: "Pipeline that fetches live tweets about a brand, analyzes sentiment using AI, and pushes data to a Power BI streaming dataset for real-time visualization." },
+            { id: 15, title: "Container Health", cat: "Data", tech: ["Docker Stats", "Python", "Tableau"], diff: "Medium", desc: "A Python agent that collects real-time stats (CPU/RAM) from running Docker containers and feeds them into a Tableau dashboard for monitoring." },
+            { id: 16, title: "Crypto Tracker", cat: "Data", tech: ["CoinGecko API", "Python", "Power BI"], diff: "Easy", desc: "ETL script that pulls live cryptocurrency prices and market cap data, transforming it for a live-updating Power BI financial report." },
+            { id: 17, title: "Auto-Report Gen", cat: "Data", tech: ["Pandas", "Jinja2", "GitHub Actions"], diff: "Hard", desc: "Automated reporting system. Committing raw CSV data triggers a workflow that generates a styled PDF report with charts and emails it." },
+            { id: 18, title: "Spotify Analyzer", cat: "Data", tech: ["Spotify API", "Python", "Tableau"], diff: "Easy", desc: "Personal data project. Authenticates with Spotify API to fetch listening history and visualizes top genres, artists, and listening times." },
+
+            // Category: Web3 & Future Tech (Blockchain/Quantum)
+            { id: 19, title: "Quantum Random API", cat: "Future", tech: ["Qiskit", "Flask", "Docker"], diff: "Hard", desc: "A Flask API that interfaces with a Quantum circuit simulator. Generates truly random numbers by measuring qubits in superposition." },
+            { id: 20, title: "Cert Verifier", cat: "Future", tech: ["Solidity", "Hardhat", "React"], diff: "Hard", desc: "A DApp to issue course certificates as NFTs or on-chain records. Employers can verify authenticity by querying the smart contract." },
+            { id: 21, title: "Decentralized Vote", cat: "Future", tech: ["Solidity", "Ethers.js", "Docker"], diff: "Medium", desc: "A tamper-proof voting system. Votes are recorded on a local blockchain testnet, with a Dockerized frontend for voters to cast ballots." },
+            { id: 22, title: "Quantum Key Gen", cat: "Future", tech: ["Qiskit", "Python", "Cryptography"], diff: "Hard", desc: "Simulation of the BB84 quantum key distribution protocol. Demonstrates how quantum states can create unhackable encryption keys." },
+            { id: 23, title: "NFT Gallery", cat: "Future", tech: ["Web3.js", "React", "Ethereum"], diff: "Medium", desc: "A web application that connects to a browser wallet (MetaMask) and displays all NFT assets owned by the connected user in a grid." },
+            { id: 24, title: "Supply Chain DApp", cat: "Future", tech: ["Solidity", "Web3.js", "React"], diff: "Medium", desc: "Track a product's lifecycle from manufacturer to consumer. Each handover is a transaction on the blockchain, ensuring transparency." },
+
+            // Category: Dev Tools (Git + Automation)
+            { id: 25, title: "Smart Documenter", cat: "DevTools", tech: ["OpenAI API", "Git Hooks", "Python"], diff: "Medium", desc: "A pre-commit git hook that reads changed files, sends them to an LLM to generate documentation strings, and appends them before commit." },
+            { id: 26, title: "Linter Bot", cat: "DevTools", tech: ["GitHub Actions", "Pylint/ESLint"], diff: "Easy", desc: "Strict CI bot. Runs linters on Pull Requests and automatically posts inline comments on specific lines of code that violate style guides." },
+            { id: 27, title: "Docker Cleaner", cat: "DevTools", tech: ["Bash", "Cron", "Docker"], diff: "Easy", desc: "System maintenance script. Runs nightly to identify and prune stopped containers, unused networks, and dangling images to free up space." },
+            { id: 28, title: "Repo Summarizer", cat: "DevTools", tech: ["LangChain", "Ollama", "Git"], diff: "Medium", desc: "CLI tool that clones a repo, chunks code files, and allows the user to ask questions like 'How does the auth module work?' using RAG." },
+            { id: 29, title: "Branch Protector", cat: "DevTools", tech: ["GitHub Actions", "Bash"], diff: "Easy", desc: "Enforcement workflow. Automatically closes any Pull Request to the 'main' branch that does not pass a comprehensive suite of unit tests." },
+            { id: 30, title: "Dependency Auditor", cat: "DevTools", tech: ["Trivy", "Docker", "Python"], diff: "Medium", desc: "Security pipeline. Scans a project's dependencies (requirements.txt or package.json) inside a container for known CVE vulnerabilities." },
+        ];
+
+        // --- Components ---
+
+        const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }) => (
+            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-700 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+                <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700 bg-slate-900">
+                    <div className="flex items-center gap-2 font-bold text-lg text-blue-400">
+                        <Cpu size={24} />
+                        <span>CSE3232 Hub</span>
+                    </div>
+                    <button className="md:hidden text-slate-400" onClick={() => setIsOpen(false)}>
+                        <X size={24} />
+                    </button>
+                </div>
+                <nav className="p-4 space-y-2">
+                    {modules.map((mod) => {
+                        const Icon = mod.icon;
+                        return (
+                            <button
+                                key={mod.id}
+                                onClick={() => { setActiveTab(mod.id); setIsOpen(false); }}
+                                className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                                    activeTab === mod.id 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                }`}
+                            >
+                                <Icon size={18} className="mr-3" />
+                                {mod.title}
+                            </button>
+                        );
+                    })}
+                </nav>
+                <div className="absolute bottom-0 w-full p-4 border-t border-slate-700">
+                    <div className="text-xs text-slate-500 text-center">
+                        v1.2.0 | Manipal University Jaipur
+                    </div>
+                </div>
+            </div>
+        );
+
+        const CodeBlock = ({ title, code }) => {
+            const [copied, setCopied] = useState(false);
+            const handleCopy = () => {
+                navigator.clipboard.writeText(code);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            return (
+                <div className="my-4 rounded-lg overflow-hidden border border-slate-700 bg-slate-950">
+                    <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700">
+                        <span className="text-xs font-mono text-slate-400">{title}</span>
+                        <button onClick={handleCopy} className="text-slate-400 hover:text-white transition-colors">
+                            {copied ? <CheckCircle size={14} className="text-green-500"/> : <Copy size={14} />}
+                        </button>
+                    </div>
+                    <div className="p-4 overflow-x-auto">
+                        <pre className="text-sm code-font text-blue-300">
+                            {code}
+                        </pre>
+                    </div>
+                </div>
+            );
+        };
+
+        const CheatSheet = ({ data, title }) => (
+            <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg">
+                <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-200">{title} Cheat Sheet</h3>
+                    <Code size={18} className="text-slate-500"/>
+                </div>
+                <div className="divide-y divide-slate-700">
+                    {data.map((item, idx) => (
+                        <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4 px-6 py-3 hover:bg-slate-750">
+                            <code className="text-sm code-font text-pink-400">{item.cmd}</code>
+                            <span className="text-sm text-slate-400">{item.desc}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const LabResourceList = ({ labs }) => (
+            <div className="mt-8">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                    <BookOpen size={20} className="mr-2 text-blue-400"/> Lab Resources
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {labs.map((lab) => (
+                        <a 
+                            key={lab.id} 
+                            href={lab.url} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="block p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-750 hover:border-blue-500 transition-all group"
+                        >
+                            <div className="flex justify-between items-start">
+                                <h4 className="font-bold text-blue-300 group-hover:text-blue-200">{lab.title}</h4>
+                                <ExternalLink size={16} className="text-slate-500 group-hover:text-blue-400"/>
+                            </div>
+                            <p className="text-sm text-slate-400 mt-2">{lab.desc}</p>
+                        </a>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const ExternalToolCard = ({ title, desc, url, color = "blue" }) => (
+            <div className="group relative p-6 bg-slate-800 rounded-xl border border-slate-700 hover:border-blue-500 transition-all duration-300">
+                <h4 className="text-lg font-bold text-white mb-2">{title}</h4>
+                <p className="text-sm text-slate-400 mb-4">{desc}</p>
+                <a 
+                    href={url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className={`inline-flex items-center text-sm font-semibold text-${color}-400 hover:text-${color}-300`}
+                >
+                    Launch Simulator <ExternalLink size={14} className="ml-2" />
+                </a>
+            </div>
+        );
+
+        const Quiz = ({ question, options, answer }) => {
+            const [selected, setSelected] = useState(null);
+            const [showResult, setShowResult] = useState(false);
+
+            return (
+                <div className="mt-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <h4 className="text-md font-semibold text-blue-300 mb-4 flex items-center">
+                        <ShieldCheck size={18} className="mr-2"/> Knowledge Check
+                    </h4>
+                    <p className="mb-4 text-slate-300">{question}</p>
+                    <div className="space-y-2">
+                        {options.map((opt, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => { setSelected(idx); setShowResult(true); }}
+                                disabled={showResult}
+                                className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all ${
+                                    showResult 
+                                        ? idx === answer 
+                                            ? 'bg-green-900/50 border border-green-500 text-green-200'
+                                            : selected === idx 
+                                                ? 'bg-red-900/50 border border-red-500 text-red-200'
+                                                : 'bg-slate-900 text-slate-500'
+                                        : 'bg-slate-900 hover:bg-slate-700 text-slate-300'
+                                }`}
+                            >
+                                {opt}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Views ---
+
+        const Dashboard = ({ setActiveTab }) => (
+            <div className="space-y-8 animate-fade-in">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 shadow-2xl">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Welcome to CSE3232</h1>
+                    <p className="text-blue-100 max-w-2xl mb-6">
+                        Your single source of truth for Emerging Tools & Technology. 
+                        Master DevOps, Data Intelligence, AI, and Quantum Computing in one integrated platform.
+                    </p>
+                    <button 
+                        onClick={() => setActiveTab('devops')}
+                        className="bg-white text-blue-700 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center"
+                    >
+                        Start Learning <ChevronRight size={18} className="ml-2" />
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                        <div className="h-10 w-10 bg-pink-500/20 text-pink-400 rounded-lg flex items-center justify-center mb-4">
+                            <BookOpen size={24} />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">The Syllabus</h3>
+                        <p className="text-sm text-slate-400 mb-4">Comprehensive coverage of 5 modules spanning 13 weeks of laboratory planning.</p>
+                        <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div className="bg-pink-500 h-full w-full"></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                        <div className="h-10 w-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center mb-4">
+                            <CheckCircle size={24} />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">Assessment</h3>
+                        <ul className="text-sm text-slate-400 space-y-2">
+                            <li className="flex justify-between"><span>Mid Term</span> <span className="font-mono text-white">20%</span></li>
+                            <li className="flex justify-between"><span>GitHub Portfolio</span> <span className="font-mono text-white">15%</span></li>
+                            <li className="flex justify-between"><span>Capstone</span> <span className="font-mono text-white">25%</span></li>
+                            <li className="flex justify-between"><span>End Term</span> <span className="font-mono text-white">40%</span></li>
+                        </ul>
+                    </div>
+
+                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                        <div className="h-10 w-10 bg-purple-500/20 text-purple-400 rounded-lg flex items-center justify-center mb-4">
+                            <GitBranch size={24} />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">Portfolio Goal</h3>
+                        <p className="text-sm text-slate-400">
+                            By the end of this course, you will have a GitHub profile populated with 
+                            Dockerized apps, RAG pipelines, and Tableau dashboards.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ModuleView = ({ title, desc, cheatSheetData, labs, children }) => (
+            <div className="space-y-8 animate-fade-in pb-20">
+                <header className="border-b border-slate-800 pb-6">
+                    <h2 className="text-3xl font-bold text-white mb-2">{title}</h2>
+                    <p className="text-slate-400">{desc}</p>
+                </header>
+                
+                {labs && <LabResourceList labs={labs} />}
+
+                {children}
+
+                {cheatSheetData && (
+                    <section>
+                        <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                            <Code size={20} className="mr-2 text-pink-500"/> Essential Commands
+                        </h3>
+                        <CheatSheet data={cheatSheetData.data} title={cheatSheetData.title} />
+                    </section>
+                )}
+            </div>
+        );
+
+        // Modules Implementations (DevOps, Containers, etc.) remain mostly same, focusing changes on CapstoneView
+        const DevOpsModule = () => (
+            <ModuleView 
+                title="Module 1: DevOps & Git" 
+                desc="Master Version Control Systems and Continuous Integration. The foundation of modern software engineering."
+                cheatSheetData={{ title: "Git", data: cheatSheets.git }}
+                labs={courseLabs.devops}
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <ExternalToolCard title="Learn Git Branching" desc="The most visual way to learn Git." url="https://learngitbranching.js.org/" color="red" />
+                    <ExternalToolCard title="GitHub Actions Visualizer" desc="Understand CI/CD pipelines visually." url="https://docs.github.com/en/actions" color="blue" />
+                </div>
+                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 mt-6">
+                    <h3 className="text-lg font-bold mb-4">Workflow Configuration (.yml)</h3>
+                    <CodeBlock title=".github/workflows/main.yml" code={`name: CI Pipeline\non: [push]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v2\n    - name: Run script\n      run: echo Hello!`} />
+                </div>
+                <Quiz question="Which command is used to combine changes?" options={["git combine", "git merge", "git fork"]} answer={1} />
+            </ModuleView>
+        );
+
+        const ContainerModule = () => (
+            <ModuleView title="Module 2: Containerization" desc="Package apps with Docker and orchestrate with Kubernetes." cheatSheetData={{ title: "Docker & K8s", data: [...cheatSheets.docker, ...cheatSheets.kubectl] }} labs={courseLabs.containers}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                    <ExternalToolCard title="Play With Docker" desc="Instant Docker playground." url="https://labs.play-with-docker.com/" />
+                    <ExternalToolCard title="Killercoda K8s" desc="Full K8s cluster environment." url="https://killercoda.com/kubernetes" color="purple" />
+                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700"><h4 className="font-bold text-white mb-2">Architecture</h4><div className="text-xs text-center space-y-2"><div className="bg-indigo-600 rounded p-1">Container</div><div className="bg-slate-600 rounded p-1">Docker Engine</div><div className="bg-slate-700 rounded p-1">OS</div></div></div>
+                </div>
+                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 mt-6"><h3 className="text-lg font-bold mb-4">Dockerfile Template</h3><CodeBlock title="Dockerfile" code={`FROM python:3.9-slim\nWORKDIR /app\nCOPY . .\nRUN pip install -r requirements.txt\nCMD ["python", "app.py"]`} /></div>
+            </ModuleView>
+        );
+
+        const DataModule = () => (
+            <ModuleView title="Module 3: Data Intelligence" desc="Transform raw data into actionable insights using Tableau and Power BI." labs={courseLabs.data}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700"><h3 className="font-bold text-orange-400 mb-2">Tableau</h3><p className="text-sm text-slate-400">Connect Data -> Drag Dimensions -> Create Dashboard.</p></div>
+                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700"><h3 className="font-bold text-yellow-400 mb-2">Power BI</h3><p className="text-sm text-slate-400">Power Query for cleaning -> DAX for logic -> Publish.</p></div>
+                </div>
+            </ModuleView>
+        );
+
+        const AIModule = () => (
+            <ModuleView title="Module 4: AI Engineering" desc="Build apps with LLMs, RAG, and Vector Databases." labs={courseLabs.ai}>
+                <div className="bg-gradient-to-br from-indigo-900 to-purple-900 p-6 rounded-xl border border-indigo-500 mb-8 mt-8"><h3 className="text-2xl font-bold text-white">RAG Pipeline</h3><p className="text-indigo-200">PDF -> Chunk -> Embed -> Vector DB -> LLM</p></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="bg-slate-800 p-6 rounded-xl border border-slate-700"><CodeBlock title="python_rag.py" code={`from langchain.vectorstores import Chroma\ndb = Chroma.from_documents(docs, embeddings)\nprint(db.similarity_search("Query"))`} /></div><div className="space-y-4"><ExternalToolCard title="Hugging Face" desc="ML Demos" url="https://huggingface.co/spaces" color="yellow" /><ExternalToolCard title="Pinecone" desc="Vector DB" url="https://app.pinecone.io/" color="green" /></div></div>
+            </ModuleView>
+        );
+
+        const FutureModule = () => (
+            <ModuleView title="Module 5: Future Tech" desc="Quantum Computing and Blockchain Technology." labs={courseLabs.future}>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 mt-8">
+                    <div className="border border-slate-700 rounded-xl p-6 bg-slate-800/50"><h3 className="text-2xl font-bold text-purple-400 mb-4">Quantum</h3><ExternalToolCard title="Quirk Simulator" desc="Quantum Circuits" url="https://algassert.com/quirk" color="purple" /></div>
+                    <div className="border border-slate-700 rounded-xl p-6 bg-slate-800/50"><h3 className="text-2xl font-bold text-blue-400 mb-4">Blockchain</h3><ExternalToolCard title="Remix IDE" desc="Solidity Contracts" url="https://remix.ethereum.org/" color="blue" /></div>
+                </div>
+            </ModuleView>
+        );
+
+        const CapstoneView = () => {
+            const [filter, setFilter] = useState("All");
+            
+            const categories = ["All", "MLOps", "Cloud", "Data", "Future", "DevTools"];
+            
+            const filteredProjects = useMemo(() => {
+                if (filter === "All") return allProjects;
+                return allProjects.filter(p => p.cat === filter);
+            }, [filter]);
+
+            return (
+                <ModuleView title="Capstone Hub" desc="Choose from 30 integrated projects combining multiple modules. Filter by track below.">
+                    
+                    {/* Filter Buttons */}
+                    <div className="flex flex-wrap gap-2 mb-8">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setFilter(cat)}
+                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                                    filter === cat 
+                                    ? 'bg-blue-600 text-white shadow-lg scale-105' 
+                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                }`}
+                            >
+                                {cat === "Future" ? "Web3 & Quantum" : cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        {filteredProjects.map((p) => (
+                            <div key={p.id} className="bg-slate-800 border border-slate-700 p-6 rounded-xl hover:bg-slate-750 transition-colors animate-fade-in group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h4 className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">{p.title}</h4>
+                                    <span className={`text-xs px-2 py-1 rounded font-mono ${
+                                        p.diff === 'Hard' ? 'bg-red-900/50 text-red-300 border border-red-800' : 
+                                        p.diff === 'Medium' ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-800' : 
+                                        'bg-green-900/50 text-green-300 border border-green-800'
+                                    }`}>
+                                        {p.diff}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-slate-400 mb-4">{p.desc}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {p.tech.map(t => (
+                                        <span key={t} className="text-xs bg-slate-900 text-blue-300 px-2 py-1 rounded border border-slate-700">{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-8">
+                        <h3 className="text-2xl font-bold mb-6">Evaluation Rubric</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="border-b border-slate-700 text-slate-400 uppercase">
+                                    <tr><th className="py-3 px-4">Criteria</th><th className="py-3 px-4">Weight</th><th className="py-3 px-4">Expectation</th></tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    <tr><td className="py-4 px-4 font-bold text-white">Functionality</td><td className="py-4 px-4">40%</td><td className="py-4 px-4 text-slate-400">Deployed & Working</td></tr>
+                                    <tr><td className="py-4 px-4 font-bold text-white">Integration</td><td className="py-4 px-4">30%</td><td className="py-4 px-4 text-slate-400">Combines 2+ Modules</td></tr>
+                                    <tr><td className="py-4 px-4 font-bold text-white">Docs</td><td className="py-4 px-4">30%</td><td className="py-4 px-4 text-slate-400">README & Architecture Diagram</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </ModuleView>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'home': return <Dashboard setActiveTab={setActiveTab} />;
+                    case 'devops': return <DevOpsModule />;
+                    case 'containers': return <ContainerModule />;
+                    case 'data': return <DataModule />;
+                    case 'ai': return <AIModule />;
+                    case 'future': return <FutureModule />;
+                    case 'capstone': return <CapstoneView />;
+                    default: return <Dashboard setActiveTab={setActiveTab} />;
+                }
+            };
+
+            return (
+                <div className="flex h-screen overflow-hidden bg-slate-900 text-slate-200">
+                    <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+                    <div className="flex-1 flex flex-col h-full w-full md:pl-64 transition-all duration-300">
+                        <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 border-b border-slate-700">
+                            <span className="font-bold text-blue-400">CSE3232 Hub</span>
+                            <button onClick={() => setSidebarOpen(true)}><Menu size={24} /></button>
+                        </div>
+                        <main className="flex-1 overflow-y-auto p-4 md:p-8"><div className="max-w-6xl mx-auto">{renderContent()}</div></main>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
