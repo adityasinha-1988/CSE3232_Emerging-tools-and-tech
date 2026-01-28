@@ -88,28 +88,35 @@
             { id: 'capstone', title: 'Capstone Hub', icon: Layers },
         ];
 
+        // NEW: Updated Free Resources List
         const courseLabs = {
             devops: [
-                { id: 1, title: "Lab 1: Git Mastery", url: "https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository", desc: "Official Pro Git Book - Chapters 1 & 2" },
-                { id: 2, title: "Lab 2: CI/CD Pipelines", url: "https://docs.github.com/en/actions/quickstart", desc: "Automate workflows with GitHub Actions" }
+                { id: 1, title: "Git Immersion", url: "https://gitimmersion.com", desc: "Guided lab for branching/merging." },
+                { id: 2, title: "GitHub Actions Course", url: "https://github.com/sidpalas/devops-directive-github-actions-course", desc: "Complete GitHub Actions guide." },
+                { id: 3, title: "Video: Actions Tutorial", url: "https://www.youtube.com/watch?v=R8_veQiYBjI", desc: "DevOps Directive Tutorial." }
             ],
             containers: [
-                { id: 3, title: "Lab 3: Docker Basics", url: "https://docs.docker.com/get-started/", desc: "Containerize a simple Node.js/Python app" },
-                { id: 4, title: "Lab 4: Kubernetes Orchestration", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/", desc: "Deploy apps using Minikube or Kind" }
+                { id: 4, title: "IBM Docker Labs", url: "https://github.com/evgenyzorin/IBM-Docker-Kubernetes-OpenShift", desc: "Hands-on Docker/K8s labs." },
+                { id: 5, title: "Video: Docker Crash Course", url: "https://www.youtube.com/watch?v=3c-iBn73dDE", desc: "TechWorld with Nana." },
+                { id: 6, title: "Video: K8s Full Course", url: "https://www.youtube.com/watch?v=X48VuDVv0do", desc: "FreeCodeCamp (3 Hours)." },
+                { id: 7, title: "AWS Cloud Practitioner", url: "https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/", desc: "Free official cloud path." }
             ],
             data: [
-                { id: 5, title: "Lab 5: Tableau Visualization", url: "https://help.tableau.com/current/guides/get-started-tutorial/en-us/get-started-tutorial-home.htm", desc: "Build interactive dashboards & connect data" },
-                { id: 6, title: "Lab 6: Power BI Reports", url: "https://learn.microsoft.com/en-us/power-bi/fundamentals/service-get-started", desc: "Data modeling and DAX basics" }
+                { id: 8, title: "Video: Tableau Full Course", url: "https://www.youtube.com/watch?v=TPPlrWWfOqc", desc: "FreeCodeCamp (6 Hours)." },
+                { id: 9, title: "Tableau Public Training", url: "https://www.tableau.com/learn/training/20224", desc: "Official free video series." }
             ],
             ai: [
-                { id: 7, title: "Lab 7: Prompt Engineering", url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/", desc: "Guide to effective LLM prompting" },
-                { id: 8, title: "Lab 8: RAG Systems", url: "https://python.langchain.com/docs/use_cases/question_answering/", desc: "Retrieval Augmented Generation with LangChain" },
-                { id: 9, title: "Lab 9: GenAI App Dev", url: "https://docs.streamlit.io/get-started/create-an-app", desc: "Build frontend for AI apps with Streamlit" }
+                { id: 10, title: "Start LLMs Guide", url: "https://github.com/louisfb01/start-llms", desc: "Comprehensive LLM roadmap." },
+                { id: 11, title: "Hugging Face Course", url: "https://www.youtube.com/playlist?list=PLoROMvodv4rO14x8jpJ_ozV2qNO48T50V", desc: "Official Hugging Face playlist." },
+                { id: 12, title: "GenAI & Vector DBs", url: "https://github.com/entbappy/Complete-Generative-AI-Course-on-YouTube", desc: "Covers ChromaDB/Pinecone." },
+                { id: 13, title: "Learn RAG", url: "https://github.com/alfredodeza/learn-retrieval-augmented-generation", desc: "RAG from scratch." }
             ],
             future: [
-                { id: 10, title: "Lab 10: Quantum Circuits", url: "https://qiskit.org/learn/", desc: "IBM Qiskit Textbook & Labs" },
-                { id: 11, title: "Lab 11: Blockchain Basics", url: "https://andersbrownworth.com/blockchain/", desc: "Visual Demo of Hash, Block, and Chain" },
-                { id: 12, title: "Lab 12: Smart Contracts", url: "https://cryptozombies.io/", desc: "Learn Solidity by building a Zombie game" }
+                { id: 14, title: "Qiskit Tutorials", url: "https://github.com/Qiskit/qiskit-tutorials", desc: "Official Quantum notebooks." },
+                { id: 15, title: "Qiskit Textbook", url: "https://qiskit.org/learn/", desc: "Interactive Quantum book." },
+                { id: 16, title: "CryptoZombies", url: "https://cryptozombies.io/", desc: "Gamified Solidity course." },
+                { id: 17, title: "Video: Solidity Course", url: "https://www.youtube.com/watch?v=gyMwXuJrbJQ", desc: "FreeCodeCamp (32 Hours)." },
+                { id: 18, title: "Solidity by Example", url: "https://solidity-by-example.org/", desc: "Snippets for ERC-20 etc." }
             ]
         };
 
@@ -214,7 +221,7 @@
                 </nav>
                 <div className="absolute bottom-0 w-full p-4 border-t border-slate-700">
                     <div className="text-xs text-slate-500 text-center">
-                        v1.2.0 | Manipal University Jaipur
+                        v1.3.0 | Manipal University Jaipur
                     </div>
                 </div>
             </div>
